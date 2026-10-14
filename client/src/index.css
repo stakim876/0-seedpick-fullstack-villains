@@ -1,0 +1,22 @@
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  color: #1f2933;
+  background: #f6f7f9;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+#root {
+  min-height: 100svh;
+}
