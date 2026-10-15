@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAccount } from "../account";
 
 // 김승태: 주문 내역을 전체·매수·매도로 거르고, 기업 이름을 누르면 상세로 이동한다.
+// 한 줄에는 시각, 기업 이름, 매수·매도, 수량, 주가, 금액을 보여 준다.
 function HistoryPage() {
   const { orders } = useAccount();
   // 전체, 매수, 매도로 내역을 거른다. 기업 이름을 누르면 상세로 간다.
@@ -32,6 +33,7 @@ function HistoryPage() {
           </p>
           <p>{order.side === "buy" ? "매수" : "매도"}</p>
           <p>수량 {order.quantity}</p>
+          <p>주가 {order.price.toLocaleString("ko-KR")}원</p>
           <p>금액 {order.amount.toLocaleString("ko-KR")}원</p>
         </section>
       ))}
