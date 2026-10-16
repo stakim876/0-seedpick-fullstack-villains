@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAccount } from "../account";
 
-// 김승태: 기업 상세를 조회하고, 매수로 잔액·보유·평균 단가와 주문 내역을 바꾼다.
+// 김승태: 기업 상세를 조회하고, 매수 주문을 서버에 보낸다.
 
 function DetailPage() {
   const { id } = useParams();
@@ -10,7 +10,7 @@ function DetailPage() {
   const [status, setStatus] = useState("loading");
   const [quantity, setQuantity] = useState("");
   const [message, setMessage] = useState("");
-  const { cash, setCash, holdings, setHoldings, orders, setOrders } = useAccount();
+  const { cash, setCash, holdings, setHoldings, setOrders } = useAccount();
 
   // 주소의 아이디로 기업 하나를 받는다. 없으면 목록으로 돌아갈 수 있다.
   useEffect(() => {
@@ -41,8 +41,8 @@ function DetailPage() {
     loadStartup();
   }, [id]);
 
-  // 매수하면 잔액을 줄이고 보유를 갱신한다. 돈이 부족하면 안내만 한다.
-  function onBuy(event) {
+  // 1주 미만이거나 잔액보다 비싸면 주문하지 않는다. 되면 서버가 돌려준 잔액·보유·내역으로 다시 그린다.
+  async function onBuy(event) {
     event.preventDefault();
     const shares = Number(quantity);
 
@@ -50,69 +50,37 @@ function DetailPage() {
       return;
     }
 
-    if (quantity.trim() === "" || Number.isNaN(shares) || shares <= 0) {
+    if (quantity.trim() === "" || !Number.isInteger(shares) || shares < 1) {
       setMessage("수량을 입력하세요.");
       return;
     }
 
-    const cost = startup.price * shares;
-
-    if (cost > cash) {
+    if (startup.price * shares > cash) {
       setMessage("주문 가능 금액이 부족합니다.");
       return;
     }
 
-    const owned = holdings.find((item) => item.id === startup.id);
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startupId: startup.id, side: "buy", quantity: shares }),
+      });
+      const body = await response.json();
 
-    // 같은 기업이면 수량을 더하고 평균 단가를 다시 계산한다.
-    if (owned) {
-      const nextQuantity = owned.quantity + shares;
-      const averagePrice = (owned.quantity * owned.averagePrice + cost) / nextQuantity;
+      if (!response.ok) {
+        setMessage(body.message || "매수하지 못했습니다.");
+        return;
+      }
 
-      setHoldings(
-        holdings.map((item) =>
-          item.id === startup.id
-            ? {
-                ...item,
-                quantity: nextQuantity,
-                averagePrice,
-                price: startup.price,
-                value: nextQuantity * startup.price,
-              }
-            : item,
-        ),
-      );
-    } else {
-      setHoldings([
-        ...holdings,
-        {
-          id: startup.id,
-          name: startup.name,
-          quantity: shares,
-          averagePrice: startup.price,
-          price: startup.price,
-          value: cost,
-        },
-      ]);
+      setCash(body.cash);
+      setHoldings(body.holdings);
+      setOrders(body.orders);
+      setQuantity("");
+      setMessage(`${startup.name} ${shares}주를 매수했습니다.`);
+    } catch {
+      setMessage("매수하지 못했습니다.");
     }
-
-    setCash(cash - cost);
-    // 매수가 되면 주문 내역 맨 앞에 한 줄을 남긴다.
-    setOrders([
-      {
-        id: String(Date.now()),
-        startupId: startup.id,
-        name: startup.name,
-        side: "buy",
-        quantity: shares,
-        price: startup.price,
-        amount: cost,
-        createdAt: new Date().toISOString(),
-      },
-      ...orders,
-    ]);
-    setQuantity("");
-    setMessage(`${startup.name} ${shares}주를 매수했습니다.`);
   }
 
   const rate =
