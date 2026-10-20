@@ -200,6 +200,11 @@
   color: #0f766e;
 }
 
+.startup-price span.down,
+.info .down {
+  color: #c2410c;
+}
+
 .footer {
   display: flex;
   align-items: center;

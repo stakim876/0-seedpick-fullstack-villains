@@ -21,7 +21,7 @@ export default function Header() {
           포트폴리오
         </NavLink>
       </nav>
-      <p className="cash">주문 가능 금액</p>
+      <p className="cash">주문 가능 금액 10,000,000원</p>
     </header>
   );
 }
