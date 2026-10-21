@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useAccount } from "../account";
 
 function DetailPage() {
   const { id } = useParams();
@@ -7,6 +8,7 @@ function DetailPage() {
   const [status, setStatus] = useState("loading");
   const [quantity, setQuantity] = useState("");
   const [message, setMessage] = useState("");
+  const { cash, setCash, holdings, setHoldings } = useAccount();
 
   // 주소의 아이디로 기업 하나를 받는다. 없으면 목록으로 돌아갈 수 있다.
   async function loadStartup() {
@@ -37,7 +39,7 @@ function DetailPage() {
     loadStartup();
   }, [id]);
 
-  // 수량이 없거나 0 이하면 안내만 한다. 잔액은 바꾸지 않는다.
+  // 매수하면 잔액을 줄이고 보유를 갱신한다. 돈이 부족하면 안내만 한다.
   function onBuy(event) {
     event.preventDefault();
     const shares = Number(quantity);
@@ -47,12 +49,59 @@ function DetailPage() {
       return;
     }
 
-    setMessage("");
+    const cost = startup.price * shares;
+
+    if (cost > cash) {
+      setMessage("주문 가능 금액이 부족합니다.");
+      return;
+    }
+
+    const owned = holdings.find((item) => item.id === startup.id);
+
+    if (owned) {
+      const nextQuantity = owned.quantity + shares;
+      const averagePrice = (owned.quantity * owned.averagePrice + cost) / nextQuantity;
+
+      setHoldings(
+        holdings.map((item) =>
+          item.id === startup.id
+            ? {
+                ...item,
+                quantity: nextQuantity,
+                averagePrice,
+                price: startup.price,
+                value: nextQuantity * startup.price,
+              }
+            : item,
+        ),
+      );
+    } else {
+      setHoldings([
+        ...holdings,
+        {
+          id: startup.id,
+          name: startup.name,
+          quantity: shares,
+          averagePrice: startup.price,
+          price: startup.price,
+          value: cost,
+        },
+      ]);
+    }
+
+    setCash(cash - cost);
+    setQuantity("");
+    setMessage(`${startup.name} ${shares}주를 매수했습니다.`);
   }
 
   const rate =
     startup && (startup.changeRate > 0 ? `+${startup.changeRate}` : startup.changeRate);
   const rateClass = startup && startup.changeRate < 0 ? "down" : "";
+  const sharesPreview = Number(quantity);
+  const buyAmount =
+    startup && quantity.trim() !== "" && !Number.isNaN(sharesPreview) && sharesPreview > 0
+      ? startup.price * sharesPreview
+      : 0;
 
   return (
     <main className="page">
@@ -93,6 +142,7 @@ function DetailPage() {
                 onChange={(event) => setQuantity(event.target.value)}
               />
             </label>
+            <p className="empty">매수 금액 {buyAmount.toLocaleString("ko-KR")}원</p>
             {message && <p className="empty">{message}</p>}
             <button type="submit">매수</button>
           </form>

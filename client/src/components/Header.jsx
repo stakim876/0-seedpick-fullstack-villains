@@ -1,6 +1,9 @@
 import { NavLink } from "react-router-dom";
+import { useAccount } from "../account";
 
 export default function Header() {
+  const { cash } = useAccount();
+
   return (
     <header className="header">
       <NavLink to="/" className="logo">
@@ -21,7 +24,7 @@ export default function Header() {
           포트폴리오
         </NavLink>
       </nav>
-      <p className="cash">주문 가능 금액 10,000,000원</p>
+      <p className="cash">주문 가능 금액 {cash.toLocaleString("ko-KR")}원</p>
     </header>
   );
 }
