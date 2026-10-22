@@ -8,34 +8,34 @@ function DetailPage() {
   const [status, setStatus] = useState("loading");
   const [quantity, setQuantity] = useState("");
   const [message, setMessage] = useState("");
-  const { cash, setCash, holdings, setHoldings } = useAccount();
+  const { cash, setCash, holdings, setHoldings, orders, setOrders } = useAccount();
 
   // 주소의 아이디로 기업 하나를 받는다. 없으면 목록으로 돌아갈 수 있다.
-  async function loadStartup() {
-    setStatus("loading");
-    setMessage("");
-
-    try {
-      const response = await fetch(`/api/startups/${id}`);
-
-      if (response.status === 404) {
-        setStartup(null);
-        setStatus("missing");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error();
-      }
-
-      setStartup(await response.json());
-      setStatus("done");
-    } catch {
-      setStatus("error");
-    }
-  }
-
   useEffect(() => {
+    async function loadStartup() {
+      setStatus("loading");
+      setMessage("");
+
+      try {
+        const response = await fetch(`/api/startups/${id}`);
+
+        if (response.status === 404) {
+          setStartup(null);
+          setStatus("missing");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error();
+        }
+
+        setStartup(await response.json());
+        setStatus("done");
+      } catch {
+        setStatus("error");
+      }
+    }
+
     loadStartup();
   }, [id]);
 
@@ -43,6 +43,10 @@ function DetailPage() {
   function onBuy(event) {
     event.preventDefault();
     const shares = Number(quantity);
+
+    if (!startup) {
+      return;
+    }
 
     if (quantity.trim() === "" || Number.isNaN(shares) || shares <= 0) {
       setMessage("수량을 입력하세요.");
@@ -90,6 +94,20 @@ function DetailPage() {
     }
 
     setCash(cash - cost);
+    // 매수가 되면 주문 내역 맨 앞에 한 줄을 남긴다.
+    setOrders([
+      {
+        id: String(Date.now()),
+        startupId: startup.id,
+        name: startup.name,
+        side: "buy",
+        quantity: shares,
+        price: startup.price,
+        amount: cost,
+        createdAt: new Date().toISOString(),
+      },
+      ...orders,
+    ]);
     setQuantity("");
     setMessage(`${startup.name} ${shares}주를 매수했습니다.`);
   }
@@ -103,6 +121,9 @@ function DetailPage() {
       ? startup.price * sharesPreview
       : 0;
 
+  // 이미 가진 기업이면 보유 수량을 보여 준다.
+  const owned = startup && holdings.find((item) => item.id === startup.id);
+      
   return (
     <main className="page">
       <h1>상세</h1>
@@ -130,6 +151,7 @@ function DetailPage() {
               <dd>{startup.price.toLocaleString("ko-KR")}원</dd>
               <dt>등락률</dt>
               <dd className={rateClass}>{rate}%</dd>
+              {owned && <p className="empty">보유 {owned.quantity}주</p>}
             </dl>
           </section>
           <form className="buy" onSubmit={onBuy}>

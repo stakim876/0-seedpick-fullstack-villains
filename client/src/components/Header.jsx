@@ -23,6 +23,12 @@ export default function Header() {
         >
           포트폴리오
         </NavLink>
+        <NavLink
+          to="/history"
+          className={({ isActive }) => (isActive ? "is-active" : "")}
+        >
+          주문 내역
+        </NavLink>
       </nav>
       <p className="cash">주문 가능 금액 {cash.toLocaleString("ko-KR")}원</p>
     </header>
