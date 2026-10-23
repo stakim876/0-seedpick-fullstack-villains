@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+// 김승태: 계좌를 불러오고, 잔액·보유·주문 내역이 바뀌면 서버에 다시 저장한다.
 // 주문 가능 금액과 보유를 화면이 같이 본다.
 export const START_CASH = 10000000;
 
@@ -24,6 +25,8 @@ export function AccountProvider({ children }) {
 
         let account = await response.json();
         const saved = localStorage.getItem("account");
+
+        // 서버 계좌가 비어 있고 브라우저에 남긴 값이 있으면 그 값을 서버로 옮긴다.
 
         if (
           saved &&
