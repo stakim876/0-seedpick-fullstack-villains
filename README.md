@@ -4,6 +4,8 @@
 
 ## 실행
 
+MongoDB가 `localhost:27017`에 떠 있어야 한다. 데이터베이스 이름은 `seedpick`이다.
+
 ```
 npm install
 npm run dev

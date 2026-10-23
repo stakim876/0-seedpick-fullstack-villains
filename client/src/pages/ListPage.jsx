@@ -32,15 +32,16 @@ function ListPage() {
     loadStartups();
   }, []);
 
-  // 검색은 기업 이름, 지역. 업종이 전체가 아니면 그 업종만 남긴다.
+  // 검색은 기업 이름, 지역, 소개. 업종이 전체가 아니면 그 업종만 남긴다.
   const text = keyword.trim().toLowerCase();
   const visible = startups.filter((startup) => {
     const sameIndustry = industry === "전체" || startup.industry === industry;
-    const haystack = `${startup.name} ${startup.region}`.toLowerCase();
+    const haystack = `${startup.name} ${startup.region} ${startup.description}`.toLowerCase();
     const matched = text === "" || haystack.includes(text);
 
     return sameIndustry && matched;
   });
+  const recommended = [...startups].sort((a, b) => b.changeRate - a.changeRate).slice(0, 3);
 
   return (
     <main className="page">
@@ -49,7 +50,7 @@ function ListPage() {
         <input
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
-          placeholder="기업 이름, 지역"
+          placeholder="기업 이름, 지역, 소개"
         />
         <select value={industry} onChange={(event) => setIndustry(event.target.value)}>
           {industries.map((item) => (
@@ -59,6 +60,18 @@ function ListPage() {
           ))}
         </select>
       </div>
+      {status === "done" && (
+        <section className="recommend">
+          <h2>추천</h2>
+          <div className="card-list">
+            {recommended.map((startup) => (
+              <Link key={startup.id} to={`/startups/${startup.id}`}>
+                <StartupCard startup={startup} />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       {status === "loading" && <p className="empty">기업을 불러오는 중입니다.</p>}
       {status === "error" && (
         <>

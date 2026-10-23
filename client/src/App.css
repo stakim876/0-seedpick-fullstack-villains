@@ -118,6 +118,15 @@
   gap: 12px;
 }
 
+.recommend {
+  margin-bottom: 24px;
+}
+
+.recommend h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
 .info,
 .buy,
 .holding {
