@@ -205,13 +205,16 @@
   font-size: 15px;
 }
 
-.startup-price span {
-  color: #0f766e;
+.startup-price span.up,
+.info .up,
+.summary .up {
+  color: #dc2626;
 }
 
 .startup-price span.down,
-.info .down {
-  color: #c2410c;
+.info .down,
+.summary .down {
+  color: #2563eb;
 }
 
 .footer {
