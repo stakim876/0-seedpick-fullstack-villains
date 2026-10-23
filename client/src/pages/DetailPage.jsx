@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAccount } from "../account";
 
+// 김승태: 기업 상세를 조회하고, 매수로 잔액·보유·평균 단가와 주문 내역을 바꾼다.
+
 function DetailPage() {
   const { id } = useParams();
   const [startup, setStartup] = useState(null);
@@ -62,6 +64,7 @@ function DetailPage() {
 
     const owned = holdings.find((item) => item.id === startup.id);
 
+    // 같은 기업이면 수량을 더하고 평균 단가를 다시 계산한다.
     if (owned) {
       const nextQuantity = owned.quantity + shares;
       const averagePrice = (owned.quantity * owned.averagePrice + cost) / nextQuantity;
@@ -114,7 +117,8 @@ function DetailPage() {
 
   const rate =
     startup && (startup.changeRate > 0 ? `+${startup.changeRate}` : startup.changeRate);
-  const rateClass = startup && startup.changeRate < 0 ? "down" : "";
+  const rateClass =
+    startup && startup.changeRate > 0 ? "up" : startup && startup.changeRate < 0 ? "down" : "";
   const sharesPreview = Number(quantity);
   const buyAmount =
     startup && quantity.trim() !== "" && !Number.isNaN(sharesPreview) && sharesPreview > 0

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, START_CASH } from "../account";
+
+// 김승태: 총 자산, 평가 손익, 주문 가능 금액을 계산하고 매도로 보유와 잔액을 바꾼다.
 function PortfolioPage() {
   const [sellId, setSellId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -65,13 +67,17 @@ function PortfolioPage() {
         </article>
         <article>
           <span>평가 손익</span>
-          <strong>{profit.toLocaleString("ko-KR")}원</strong>
+          <strong className={profit > 0 ? "up" : profit < 0 ? "down" : ""}>
+            {profit > 0 ? "+" : ""}
+            {profit.toLocaleString("ko-KR")}원
+          </strong>
         </article>
         <article>
           <span>주문 가능 금액</span>
           <strong>{orderable.toLocaleString("ko-KR")}원</strong>
         </article>
       </section>
+      {/* 보유가 없으면 안내만 보여 준다. */}
       {holdings.length === 0 && <p className="empty">보유한 기업이 없습니다.</p>}
       {holdings.map((item) => (
         <section className="holding" key={item.id}>

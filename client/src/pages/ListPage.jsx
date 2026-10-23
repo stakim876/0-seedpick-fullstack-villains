@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import StartupCard from "../components/StartupCard";
 
+// 김승태: 목록을 조회하고, 이름·지역·소개와 업종으로 거른 뒤 상세로 이동한다.
+
 const industries = ["전체", "소프트웨어", "헬스케어", "물류", "교육"];
 
 function ListPage() {
@@ -41,6 +43,7 @@ function ListPage() {
 
     return sameIndustry && matched;
   });
+  // 등락률이 높은 기업 3개를 추천으로 보여 준다.
   const recommended = [...startups].sort((a, b) => b.changeRate - a.changeRate).slice(0, 3);
 
   return (
@@ -81,6 +84,7 @@ function ListPage() {
           </button>
         </>
       )}
+      {/* 기업이 없으면 등록 안내, 조건에 맞는 기업이 없으면 검색 안내를 보여 준다. */}
       {status === "done" && visible.length === 0 && (
         <p className="empty">
           {startups.length === 0 ? "등록된 기업이 없습니다." : "검색 결과가 없습니다."}
