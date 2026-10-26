@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 // 김승태: 계좌를 불러오고, 잔액·보유·주문 내역이 바뀌면 서버에 다시 저장한다.
-// 주문 가능 금액과 보유를 화면이 같이 본다.
+// 주문 가능 금액과 보유를 목록, 상세, 포트폴리오, 주문 내역이 같이 본다.
 export const START_CASH = 10000000;
 
 const AccountContext = createContext(null);

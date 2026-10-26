@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import StartupCard from "../components/StartupCard";
 
 // 김승태: 목록을 조회하고, 이름·지역·소개와 업종으로 거른 뒤 상세로 이동한다.
+// 등락률이 높은 기업 3개는 추천으로 따로 보여 준다.
 
 const industries = ["전체", "소프트웨어", "헬스케어", "물류", "교육"];
 
