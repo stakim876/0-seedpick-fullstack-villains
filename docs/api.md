@@ -1,66 +1,48 @@
 # API 명세
 
-기본 주소는 `/api`. 요청과 응답 본문은 JSON이다. 날짜는 `YYYY-MM-DD`로 보낸다.
+기본 주소는 `/api`. 요청과 응답 본문은 JSON이다.
 
-상태 값: `todo`, `doing`, `done`  
-우선순위: `low`, `medium`, `high`
+## 기업 목록
 
-## 목록 조회
+`GET /api/startups`
 
-`GET /api/tasks?status=&q=&priority=`
+기업 배열을 반환한다. 화면에서 이름, 지역, 소개, 업종으로 거른다.
 
-`status`, `q`, `priority`는 생략할 수 있다.
+## 기업 상세
 
-```json
-{
-  "tasks": [
-    {
-      "id": "664f1c2a9b1e4c0011223344",
-      "title": "로그인 화면 초안",
-      "description": "이메일과 비밀번호 입력을 배치한다",
-      "status": "doing",
-      "priority": "high",
-      "dueDate": "2026-10-16"
-    }
-  ]
-}
-```
+`GET /api/startups/:id`
 
-## 추천
+없으면 `404`와 `{ "message": "기업을 찾을 수 없습니다." }`.
 
-`GET /api/tasks/recommendations`
+## 계좌 조회
 
-완료가 아니고, 우선순위가 높거나 마감일이 이틀 이내인 업무를 최대 3개 반환한다.
+`GET /api/account`
 
-## 등록
+잔액, 보유, 주문 내역을 반환한다. 계좌가 없으면 시작 금액 1,000만 원과 빈 목록으로 만든다.
 
-`POST /api/tasks`
+## 계좌 저장
+
+`PUT /api/account`
 
 ```json
-{
-  "title": "로그인 화면 초안",
-  "description": "이메일과 비밀번호 입력을 배치한다",
-  "priority": "high",
-  "dueDate": "2026-10-16"
-}
+{ "cash": 10000000, "holdings": [], "orders": [] }
 ```
 
-제목이 없으면 `400`과 `{ "message": "제목을 입력하세요." }`를 반환한다. 성공하면 생성된 업무와 `201`을 반환한다. 처음 상태는 `todo`다.
+`cash`가 숫자가 아니거나 `holdings`, `orders`가 배열이 아니면 `400`과 `{ "message": "계좌 값이 올바르지 않습니다." }`.
 
-## 상세
+## 주문
 
-`GET /api/tasks/:id`
+`POST /api/orders`
 
-없으면 `404`와 `{ "message": "업무를 찾을 수 없습니다." }`.
+```json
+{ "startupId": "1", "side": "buy", "quantity": 1 }
+```
 
-## 수정
+`side`는 `buy` 또는 `sell`이다. 수량은 1 이상의 정수다. 성공하면 바뀐 계좌와 `201`을 반환한다.
 
-`PATCH /api/tasks/:id`
+실패하면 `400`과 이유 문구다.
 
-보낸 필드만 바꾼다. 상태, 제목, 설명, 우선순위, 마감일을 받을 수 있다.
-
-## 삭제
-
-`DELETE /api/tasks/:id`
-
-성공하면 `204`.
+- 수량이 정수가 아니면 `수량을 입력하세요.`
+- 매수 금액이 잔액보다 크면 `주문 가능 금액이 부족합니다.`
+- 매도 수량이 보유보다 많으면 `보유 수량보다 많습니다.`
+- 기업이 없으면 `404`와 `기업을 찾을 수 없습니다.`
