@@ -2,60 +2,57 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, START_CASH } from "../account";
 
-// 김승태: 총 자산, 평가 손익, 주문 가능 금액을 계산하고 매도로 보유와 잔액을 바꾼다.
+// 김승태: 총 자산, 평가 손익, 주문 가능 금액을 보여주고, 매도 주문을 서버에 보낸다.
 function PortfolioPage() {
   const [sellId, setSellId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [message, setMessage] = useState("");
-  const { cash, setCash, holdings, setHoldings, orders, setOrders } = useAccount();
+  const { cash, setCash, holdings, setHoldings, setOrders } = useAccount();
   // 총 자산, 평가 손익, 주문 가능 금액을 보유와 잔액으로 계산한다.
   const totalAssets =
     cash + holdings.reduce((sum, item) => sum + item.quantity * item.price, 0);
   const profit = totalAssets - START_CASH;
   const orderable = cash;
-  // 매도하면 보유 수량을 줄이고 판 금액을 잔액에 더한다.
-  function onSell(event) {
+  // 1주 미만이거나 보유보다 많으면 주문하지 않는다. 되면 서버가 돌려준 잔액·보유·내역으로 다시 그린다.
+  async function onSell(event) {
     event.preventDefault();
     const shares = Number(quantity);
-    if (quantity.trim() === "" || Number.isNaN(shares) || shares <= 0) {
+    const holding = holdings.find((item) => item.id === sellId);
+
+    if (quantity.trim() === "" || !Number.isInteger(shares) || shares < 1) {
       setMessage("수량을 입력하세요.");
       return;
     }
-    const holding = holdings.find((item) => item.id === sellId);
+
     if (!holding || shares > holding.quantity) {
       setMessage("보유 수량보다 많습니다.");
       return;
     }
-    const nextQuantity = holding.quantity - shares;
-    const amount = holding.price * shares;
-    setCash(cash + amount);
-    // 매도가 되면 주문 내역 맨 앞에 한 줄을 남긴다.
-    setOrders([
-      {
-        id: String(Date.now()),
-        startupId: holding.id,
-        name: holding.name,
-        side: "sell",
-        quantity: shares,
-        price: holding.price,
-        amount,
-        createdAt: new Date().toISOString(),
-      },
-      ...orders,
-    ]);
-    if (nextQuantity === 0) {
-      setHoldings(holdings.filter((item) => item.id !== holding.id));
-    } else {
-      setHoldings(
-        holdings.map((item) =>
-          item.id === holding.id
-            ? { ...item, quantity: nextQuantity, value: nextQuantity * item.price }
-            : item,
-        ),
-      );
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ startupId: holding.id, side: "sell", quantity: shares }),
+      });
+      const body = await response.json();
+
+      if (!response.ok) {
+        setMessage(body.message || "매도하지 못했습니다.");
+        return;
+      }
+
+      setCash(body.cash);
+      setHoldings(body.holdings);
+      setOrders(body.orders);
+      setQuantity("");
+      if (!body.holdings.some((item) => item.id === holding.id)) {
+        setSellId("");
+      }
+      setMessage(`${holding.name} ${shares}주를 매도했습니다.`);
+    } catch {
+      setMessage("매도하지 못했습니다.");
     }
-    setQuantity("");
-    setMessage("");
   }
   return (
     <main className="page">
